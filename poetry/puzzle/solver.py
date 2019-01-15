@@ -48,6 +48,7 @@ class Solver:
         locked: Repository,
         io: IO,
         remove_untracked: bool = False,
+        target: bool = False,
         provider: Optional[Provider] = None,
     ):
         self._package = package
@@ -62,6 +63,7 @@ class Solver:
         self._provider = provider
         self._overrides = []
         self._remove_untracked = remove_untracked
+        self._target = target
 
         self._preserved_package_names = None
 
@@ -112,9 +114,11 @@ class Solver:
         operations = []
         for i, package in enumerate(packages):
             installed = False
-            for pkg in self._installed.packages:
-                if package.name == pkg.name:
-                    installed = True
+            # install all packages to target, even if they exist in the env
+            if not self._target:
+                for pkg in self._installed.packages:
+                    if package.name == pkg.name:
+                        installed = True
 
                     if pkg.source_type == "git" and package.source_type == "git":
                         from poetry.core.vcs.git import Git

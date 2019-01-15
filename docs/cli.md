@@ -182,6 +182,13 @@ poetry install --no-root
 Installation of your project's package is also skipped when the `--dev-only`
 option is passed.
 
+You can bundle all dependencies into a target directory. This is useful when building
+AWS Lambda packages.
+
+```bash
+poetry install --target ./build/
+```
+
 ### Options
 
 * `--no-dev`: Do not install dev dependencies.
@@ -190,6 +197,7 @@ option is passed.
 * `--dry-run`: Output the operations but do not execute anything (implicitly enables --verbose).
 * `--remove-untracked`: Remove dependencies not presented in the lock file
 * `--extras (-E)`: Features to install (multiple values allowed).
+* `--target (-t)`: Target directory to install dependencies.
 
 ## update
 

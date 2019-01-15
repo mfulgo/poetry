@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Iterable
 from typing import List
@@ -42,6 +43,7 @@ class Installer:
         config: Config,
         installed: Union[Repository, None] = None,
         executor: Optional[Executor] = None,
+        target: Optional[Path] = None,
     ):
         self._io = io
         self._env = env
@@ -68,6 +70,8 @@ class Installer:
 
         self._executor = executor
         self._use_executor = False
+
+        self._target = target
 
         self._installer = self._get_installer()
         if installed is None:
@@ -246,7 +250,8 @@ class Installer:
                 self._installed_repository,
                 locked_repository,
                 self._io,
-                remove_untracked=self._remove_untracked,
+                self._remove_untracked,
+                self._target is not None,
             )
 
             ops = solver.solve(use_latest=self._whitelist)
@@ -315,7 +320,8 @@ class Installer:
             self._installed_repository,
             locked_repository,
             NullIO(),
-            remove_untracked=self._remove_untracked,
+            self._remove_untracked,
+            self._target is not None,
         )
         # Everything is resolved at this point, so we no longer need
         # to load deferred dependencies (i.e. VCS, URL and path dependencies)
@@ -516,7 +522,7 @@ class Installer:
                 continue
 
             op = Install(locked)
-            if is_installed:
+            if is_installed and not self._target:
                 op.skip("Already installed")
 
             ops.append(op)
@@ -572,7 +578,7 @@ class Installer:
         return list(get_extra_package_names(repo.packages, extras, self._extras))
 
     def _get_installer(self) -> BaseInstaller:
-        return PipInstaller(self._env, self._io, self._pool)
+        return PipInstaller(self._env, self._io, self._pool, self._target)
 
     def _get_installed(self) -> InstalledRepository:
         return InstalledRepository.load(self._env)

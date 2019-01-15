@@ -6,6 +6,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Optional
 from typing import Union
 
 from cleo.io.io import IO
@@ -25,10 +26,13 @@ if TYPE_CHECKING:
 
 
 class PipInstaller(BaseInstaller):
-    def __init__(self, env: Env, io: IO, pool: Pool) -> None:
+    def __init__(
+        self, env: Env, io: IO, pool: Pool, target: Optional[Path] = None
+    ) -> None:
         self._env = env
         self._io = io
         self._pool = pool
+        self._target = target
 
     def install(self, package: "Package", update: bool = False) -> None:
         if package.source_type == "directory":
@@ -42,6 +46,9 @@ class PipInstaller(BaseInstaller):
             return
 
         args = ["install", "--no-deps"]
+
+        if self._target is not None:
+            args.extend(["--target", self._target])
 
         if (
             package.source_type not in {"git", "directory", "file", "url"}
@@ -226,12 +233,16 @@ class PipInstaller(BaseInstaller):
                 builder = SdistBuilder(package_poetry)
 
                 with builder.setup_py():
-                    if package.develop:
+                    if package.develop and not self._target:
                         return pip_editable_install(
                             directory=req, environment=self._env
                         )
                     return pip_install(
-                        path=req, environment=self._env, deps=False, upgrade=True
+                        path=req,
+                        environment=self._env,
+                        deps=False,
+                        upgrade=True,
+                        target=self._target,
                     )
 
         if package.develop:

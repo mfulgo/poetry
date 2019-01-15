@@ -32,6 +32,12 @@ class InstallCommand(InstallerCommand):
             flag=False,
             multiple=True,
         ),
+        option(
+            "target",
+            "t",
+            "Install all dependencies into target directory.",
+            flag=False,
+        ),
     ]
 
     help = """The <info>install</info> command reads the <comment>poetry.lock</> file from
@@ -71,6 +77,7 @@ dependencies and not including the current project, run the command with the
         self._installer.dry_run(self.option("dry-run"))
         self._installer.remove_untracked(self.option("remove-untracked"))
         self._installer.verbose(self._io.is_verbose())
+        self._installer.target(self.option("target"))
 
         return_code = self._installer.run()
 
